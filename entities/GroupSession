@@ -1,0 +1,26 @@
+{
+  "name": "GroupSession",
+  "type": "object",
+  "properties": {
+    "group_id": {
+      "type": "string",
+      "description": "ID of the connected group"
+    },
+    "group_name": {
+      "type": "string",
+      "description": "Name of the group"
+    },
+    "group_color": {
+      "type": "string",
+      "description": "Color of the group"
+    },
+    "last_seen": {
+      "type": "string",
+      "description": "ISO timestamp of last heartbeat"
+    }
+  },
+  "required": [
+    "group_id",
+    "last_seen"
+  ]
+}

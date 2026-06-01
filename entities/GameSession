@@ -1,0 +1,45 @@
+{
+  "name": "GameSession",
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "idle",
+        "open",
+        "buzzed"
+      ],
+      "default": "idle",
+      "description": "Current game state: idle=not started, open=waiting for buzz, buzzed=someone buzzed"
+    },
+    "buzzed_group_id": {
+      "type": "string",
+      "description": "ID of the group that buzzed first"
+    },
+    "buzzed_group_name": {
+      "type": "string",
+      "description": "Name of the group that buzzed first"
+    },
+    "buzzed_group_color": {
+      "type": "string",
+      "description": "Color of the group that buzzed first"
+    },
+    "buzzed_at": {
+      "type": "string",
+      "description": "Timestamp when the buzz happened"
+    },
+    "question_number": {
+      "type": "number",
+      "default": 0,
+      "description": "Current question number"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this is the active session"
+    }
+  },
+  "required": [
+    "status"
+  ]
+}

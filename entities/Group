@@ -1,0 +1,26 @@
+{
+  "name": "Group",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Group name"
+    },
+    "color": {
+      "type": "string",
+      "description": "Hex color for the group"
+    },
+    "banner_url": {
+      "type": "string",
+      "description": "URL of the group banner image"
+    },
+    "order": {
+      "type": "number",
+      "description": "Display order"
+    }
+  },
+  "required": [
+    "name",
+    "color"
+  ]
+}
