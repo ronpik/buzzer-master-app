@@ -2,37 +2,39 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { base44 } from "@/api/base44Client";
-import { Upload, X } from "lucide-react";
+import { X } from "lucide-react";
+import { PRESET_COLORS, MIN_SLOT, MAX_SLOT } from "../../../shared/constants.js";
 
-const PRESET_COLORS = [
-  "#EF4444", "#F97316", "#EAB308", "#22C55E", 
-  "#06B6D4", "#3B82F6", "#8B5CF6", "#EC4899",
-  "#14B8A6", "#F59E0B", "#6366F1", "#D946EF"
-];
+// Team create/edit form (DESIGN.md §13). Local-only: it builds the `Team` shape
+// ({ id?, name, color, banner_url, slot }) and hands it to `onSave`, which the
+// Admin page forwards to the store's `upsertTeam` over the WebSocket. There is no
+// Base44 upload anymore — a banner is just an (optional) image URL or local asset
+// path the operator pastes in (DESIGN.md §21, open question #2).
 
-export default function GroupForm({ group, onSave, onCancel }) {
+export default function GroupForm({ group, onSave, onCancel, takenSlots = [] }) {
+  // Pick the lowest free slot for a new team; keep the existing slot when editing.
+  const firstFreeSlot = () => {
+    for (let s = MIN_SLOT; s <= MAX_SLOT; s++) {
+      if (!takenSlots.includes(s)) return s;
+    }
+    return MIN_SLOT;
+  };
+
   const [name, setName] = useState(group?.name || "");
   const [color, setColor] = useState(group?.color || PRESET_COLORS[0]);
   const [bannerUrl, setBannerUrl] = useState(group?.banner_url || "");
-  const [uploading, setUploading] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [slot, setSlot] = useState(group?.slot ?? firstFreeSlot());
 
-  const handleBannerUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setUploading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    setBannerUrl(file_url);
-    setUploading(false);
-  };
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (!name.trim()) return;
-    setSaving(true);
-    await onSave({ name: name.trim(), color, banner_url: bannerUrl });
-    setSaving(false);
+    onSave({
+      ...(group?.id ? { id: group.id } : {}),
+      name: name.trim(),
+      color,
+      banner_url: bannerUrl.trim() || null,
+      slot: Number(slot),
+    });
   };
 
   return (
@@ -47,6 +49,34 @@ export default function GroupForm({ group, onSave, onCancel }) {
           className="text-lg h-12"
           dir="rtl"
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-sm font-semibold">עמדה (טאבלט)</Label>
+        <div className="flex flex-wrap gap-2">
+          {Array.from({ length: MAX_SLOT - MIN_SLOT + 1 }, (_, i) => MIN_SLOT + i).map((s) => {
+            // A slot taken by *another* team is disabled; the current team's own slot stays selectable.
+            const takenByOther = takenSlots.includes(s) && s !== group?.slot;
+            const selected = Number(slot) === s;
+            return (
+              <button
+                key={s}
+                type="button"
+                disabled={takenByOther}
+                onClick={() => setSlot(s)}
+                className="w-12 h-12 rounded-xl font-black text-lg transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed enabled:hover:scale-110"
+                style={{
+                  backgroundColor: selected ? color : "hsl(var(--muted))",
+                  color: selected ? "white" : "hsl(var(--muted-foreground))",
+                  border: selected ? "3px solid hsl(var(--foreground))" : "3px solid transparent",
+                }}
+              >
+                {s}
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-xs text-muted-foreground">כל קבוצה משויכת לעמדה אחת (1–{MAX_SLOT}), בהתאם לטאבלט שלה.</p>
       </div>
 
       <div className="space-y-2">
@@ -78,10 +108,15 @@ export default function GroupForm({ group, onSave, onCancel }) {
       </div>
 
       <div className="space-y-2">
-        <Label className="text-sm font-semibold">באנר הקבוצה</Label>
+        <Label htmlFor="banner" className="text-sm font-semibold">באנר הקבוצה (לא חובה)</Label>
         {bannerUrl ? (
           <div className="relative rounded-xl overflow-hidden border" style={{ aspectRatio: "16/9" }}>
-            <img src={bannerUrl} alt="Banner" className="w-full h-full object-cover" />
+            <img
+              src={bannerUrl}
+              alt="Banner"
+              className="w-full h-full object-cover"
+              onError={(e) => { e.currentTarget.style.opacity = "0.2"; }}
+            />
             <button
               type="button"
               onClick={() => setBannerUrl("")}
@@ -91,19 +126,20 @@ export default function GroupForm({ group, onSave, onCancel }) {
             </button>
           </div>
         ) : (
-          <label className="flex flex-col items-center justify-center h-32 border-2 border-dashed rounded-xl cursor-pointer hover:bg-muted/50 transition-colors">
-            <Upload className="w-6 h-6 text-muted-foreground mb-2" />
-            <span className="text-sm text-muted-foreground">
-              {uploading ? "מעלה..." : "לחץ להעלאת באנר"}
-            </span>
-            <input type="file" accept="image/*" onChange={handleBannerUpload} className="hidden" />
-          </label>
+          <Input
+            id="banner"
+            value={bannerUrl}
+            onChange={(e) => setBannerUrl(e.target.value)}
+            placeholder="כתובת תמונה (URL)..."
+            className="h-11"
+            dir="ltr"
+          />
         )}
       </div>
 
       <div className="flex gap-3 pt-2">
-        <Button type="submit" disabled={saving || !name.trim()} className="flex-1 h-11 text-base font-bold">
-          {saving ? "שומר..." : group ? "עדכן" : "הוסף קבוצה"}
+        <Button type="submit" disabled={!name.trim()} className="flex-1 h-11 text-base font-bold">
+          {group ? "עדכן" : "הוסף קבוצה"}
         </Button>
         {onCancel && (
           <Button type="button" variant="outline" onClick={onCancel} className="h-11">

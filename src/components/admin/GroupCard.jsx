@@ -4,17 +4,19 @@ import { Button } from "@/components/ui/button";
 import { Pencil, Trash2, Link as LinkIcon, QrCode, Check } from "lucide-react";
 import QRCodeModal from "@/components/admin/QRCodeModal";
 
-const GRACE_PERIOD_MS = 30000;
+// One team card on the Admin grid (DESIGN.md §13). Presence is now driven purely
+// by the live WebSocket: `connected` is the array of currently-connected tablet
+// teamIds from the store (presence = the socket, DESIGN.md §8) — no heartbeat
+// table, no `last_seen`, no stale rows.
 
-export default function GroupCard({ group, onEdit, onDelete, groupSessions = [] }) {
+export default function GroupCard({ group, onEdit, onDelete, connected = [] }) {
   const [copied, setCopied] = useState(false);
   const [showQR, setShowQR] = useState(false);
 
-  const isConnected = groupSessions.some(
-    gs => gs.group_id === group.id && gs.last_seen && (Date.now() - new Date(gs.last_seen).getTime()) < GRACE_PERIOD_MS
-  );
+  const isConnected = connected.includes(group.id);
 
-  const groupUrl = `${window.location.origin}/play/${group.id}`;
+  // Tablet URL: pin the team via ?team=<id> on the buzzer page (DESIGN.md §6).
+  const groupUrl = `${window.location.origin}/play?team=${group.id}`;
 
   const handleCopy = (e) => {
     e.stopPropagation();
@@ -51,6 +53,15 @@ export default function GroupCard({ group, onEdit, onDelete, groupSessions = [] 
               </span>
             </div>
           </div>
+
+          {/* Slot badge */}
+          {group.slot != null && (
+            <div className="mb-3">
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground bg-muted px-2.5 py-1 rounded-full">
+                עמדה {group.slot}
+              </span>
+            </div>
+          )}
 
           {/* Link + QR row */}
           <div className="flex gap-2 mb-3">
