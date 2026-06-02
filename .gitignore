@@ -30,6 +30,11 @@ dist-ssr
 .env
 .vite
 
+# Local SQLite runtime DB (created on first boot; reseeds if absent)
+server/buzzer.db
+server/buzzer.db-wal
+server/buzzer.db-shm
+
 # Vibe coding
 ANALYSIS.md
 
