@@ -1,0 +1,92 @@
+name: build-installers
+
+# Builds the bundled app on each target OS and uploads installable artifacts.
+# Native modules (better-sqlite3) are compiled/fetched on their own runner, so
+# nothing is cross-compiled. Tag a release (vX.Y.Z) to also attach the artifacts.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'packaging/**'
+      - 'installer/**'
+      - '.github/workflows/build-installers.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build client (dist/)
+        run: npm run build
+
+      - name: Assemble bundled payload
+        run: node packaging/assemble.mjs "${{ runner.temp }}/staging/app"
+
+      - name: Resolve version
+        id: ver
+        shell: bash
+        run: |
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            V="${GITHUB_REF_NAME#v}"
+          else
+            V="$(node -p "require('./package.json').version")-dev.${GITHUB_RUN_NUMBER}"
+          fi
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          echo "Building version $V"
+
+      # -------- Windows: Inno Setup installer (.exe) --------
+      - name: Install Inno Setup
+        if: runner.os == 'Windows'
+        run: choco install innosetup --no-progress -y
+
+      - name: Build Windows installer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "$env:RUNNER_TEMP\out" | Out-Null
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" `
+            "/DAppVersion=${{ steps.ver.outputs.version }}" `
+            "/DStageDir=$env:RUNNER_TEMP\staging\app" `
+            "/O$env:RUNNER_TEMP\out" `
+            "installer\buzzmaster.iss"
+
+      # -------- macOS: zip artifact --------
+      - name: Build macOS package
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          ( cd "$RUNNER_TEMP/staging" \
+            && zip -ry "$RUNNER_TEMP/out/BuzzMaster-mac-${{ steps.ver.outputs.version }}.zip" app )
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer-${{ runner.os }}
+          path: ${{ runner.temp }}/out/*
+          if-no-files-found: error
+
+      - name: Attach to GitHub Release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ runner.temp }}/out/*

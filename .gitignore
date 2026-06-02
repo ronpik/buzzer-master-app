@@ -16,6 +16,10 @@ dist
 dist-ssr
 *.local
 
+# Packaging: assembled payload + built installers
+/build
+/installer/Output
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

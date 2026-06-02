@@ -13,7 +13,9 @@
     "serve": "node server/index.js",
     "start": "node server/index.js",
     "test:fairness": "node server/test/fairness.test.mjs",
-    "test:smoke": "node server/test/smoke.mjs"
+    "test:smoke": "node server/test/smoke.mjs",
+    "assemble": "node packaging/assemble.mjs",
+    "pack:local": "npm run build && node packaging/assemble.mjs build/app"
   },
   "dependencies": {
     "better-sqlite3": "^11.10.0",
