@@ -16,7 +16,7 @@
 
 import http from 'node:http';
 import { createReadStream, existsSync, statSync } from 'node:fs';
-import { dirname, extname, join, normalize, resolve } from 'node:path';
+import { dirname, extname, isAbsolute, join, normalize, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { DEFAULT_PORT, WS_PATH } from '../shared/constants.js';
@@ -102,7 +102,12 @@ function tryServeFile(filePath, res) {
 function safeJoin(root, urlPath) {
   const decoded = decodeURIComponent(urlPath.split('?')[0]);
   const joined = normalize(join(root, decoded));
-  if (joined !== root && !joined.startsWith(root + (root.endsWith('/') ? '' : '/'))) {
+  // Cross-platform containment check. A hardcoded '/' separator check fails on
+  // Windows (paths use '\\'): it made every /assets/*.js resolve to null and
+  // fall through to the index.html SPA route, so module scripts were served as
+  // text/html. `path.relative` is separator-correct on all platforms.
+  const rel = relative(root, joined);
+  if (rel !== '' && (rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel))) {
     return null;
   }
   return joined;
