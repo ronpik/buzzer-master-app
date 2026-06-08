@@ -196,10 +196,14 @@ export default function Display() {
                         <div key={t.id} className="flex flex-col items-center gap-2">
                           <div className="relative">
                             <div
-                              className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-lg transition-opacity"
+                              className="w-20 h-20 rounded-2xl flex items-center justify-center overflow-hidden text-white font-black text-2xl shadow-lg transition-opacity"
                               style={{ backgroundColor: t.color, opacity: isConnected ? 1 : 0.3 }}
                             >
-                              {t.name?.[0]?.toUpperCase()}
+                              {t.banner_url ? (
+                                <img src={t.banner_url} alt={t.name} className="w-full h-full object-contain" />
+                              ) : (
+                                t.name?.[0]?.toUpperCase()
+                              )}
                             </div>
                             {/* Connection dot */}
                             <div
@@ -279,15 +283,21 @@ export default function Display() {
                   transition={{ delay: 0.2 }}
                 >
                   {winnerBanner ? (
-                    <div
-                      className="w-full max-w-sm mx-auto mb-4 rounded-2xl overflow-hidden shadow-2xl"
-                      style={{ aspectRatio: "16/9", border: `6px solid ${winnerColor}` }}
-                    >
-                      <img
-                        src={winnerBanner}
-                        alt={winnerName}
-                        className="w-full h-full object-cover"
-                      />
+                    <div className="mb-4">
+                      {/* `object-contain` shows the whole team image scaled to fit
+                          the frame (no cropping); the name sits below so the winner
+                          is unmistakable even when the image is a generic photo. */}
+                      <div
+                        className="w-full max-w-md mx-auto rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center bg-black/50"
+                        style={{ aspectRatio: "16 / 9", border: `6px solid ${winnerColor}` }}
+                      >
+                        <img
+                          src={winnerBanner}
+                          alt={winnerName}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                      <p className="mt-4 text-4xl md:text-5xl font-black text-white">{winnerName}</p>
                     </div>
                   ) : (
                     <motion.div

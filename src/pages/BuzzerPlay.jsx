@@ -259,6 +259,18 @@ export default function BuzzerPlay() {
       {/* Color bar at top */}
       <div className="w-full h-3 shrink-0" style={{ backgroundColor: team.color }} />
 
+      {/* Team image — identity anchor for this tablet. `object-contain` scales it
+          to fit without cropping; capped height keeps the buzzer the focus. */}
+      {team.banner_url && (
+        <div className="shrink-0 flex justify-center px-6 mt-12 mb-1">
+          <img
+            src={team.banner_url}
+            alt={team.name}
+            className="max-h-[15vh] max-w-[70%] object-contain rounded-xl"
+          />
+        </div>
+      )}
+
       {/* Connection / sync indicator (top-right) */}
       <div className="absolute top-5 right-4 z-20 flex items-center gap-2 text-xs font-medium" dir="rtl">
         {connecting ? (

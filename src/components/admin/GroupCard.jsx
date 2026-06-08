@@ -29,8 +29,13 @@ export default function GroupCard({ group, onEdit, onDelete, connected = [] }) {
     <>
       <Card className="overflow-hidden hover:shadow-lg transition-all duration-300">
         {group.banner_url ? (
-          <div className="h-28 overflow-hidden">
-            <img src={group.banner_url} alt={group.name} className="w-full h-full object-cover" />
+          // `object-contain` scales the whole image to fit the banner rectangle
+          // without cropping; the team-color tint frames any letterboxing cleanly.
+          <div
+            className="h-28 flex items-center justify-center overflow-hidden p-2"
+            style={{ backgroundColor: group.color + "14" }}
+          >
+            <img src={group.banner_url} alt={group.name} className="max-w-full max-h-full object-contain" />
           </div>
         ) : (
           <div className="h-28" style={{ backgroundColor: group.color + "22" }}>
