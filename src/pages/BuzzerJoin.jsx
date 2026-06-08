@@ -129,13 +129,11 @@ export default function BuzzerJoin() {
                 }}
               >
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden font-black text-lg shrink-0"
+                  className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg shrink-0"
                   style={{ backgroundColor: team.color }}
                 >
                   {selecting === team.id ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : team.banner_url ? (
-                    <img src={team.banner_url} alt={team.name} className="w-full h-full object-contain" />
                   ) : (
                     team.name?.[0]?.toUpperCase()
                   )}
