@@ -16,6 +16,10 @@ dist
 dist-ssr
 *.local
 
+# Packaging: assembled payload + built installers
+/build
+/installer/Output
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -30,6 +34,12 @@ dist-ssr
 .env
 .vite
 
+# Local SQLite runtime DB (created on first boot; reseeds if absent)
+server/buzzer.db
+server/buzzer.db-wal
+server/buzzer.db-shm
+
 # Vibe coding
 ANALYSIS.md
+.claude
 
