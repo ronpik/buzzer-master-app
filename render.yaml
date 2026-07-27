@@ -1,0 +1,30 @@
+# Render Blueprint for the buzz-master host.
+#
+# This app is a single Node process (NOT a static site): it serves the built
+# Vite client (dist/) AND owns the /ws WebSocket that is the game's source of
+# truth, with state in SQLite. So it must run as a Web Service.
+#
+# Deploy: push this file, then in Render: New + -> Blueprint -> pick this repo.
+services:
+  - type: web
+    name: buzz-master
+    runtime: node
+    # Free plan works for a quick test, but it (a) sleeps after 15 min idle —
+    # which drops every live WebSocket — and (b) cannot mount a disk, so the DB
+    # resets on each deploy. Use 'starter' or higher for a real event.
+    plan: starter
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: "22" # match the installer CI runner
+      # Point SQLite at the persistent disk so teams/images/audit survive deploys.
+      - key: BUZZER_DB
+        value: /data/buzzer.db
+    # Persistent disk: paid plans only. Remove this block (and BUZZER_DB above)
+    # if you deploy on the free plan — the DB will just reseed default teams.
+    disk:
+      name: buzzer-data
+      mountPath: /data
+      sizeGB: 1

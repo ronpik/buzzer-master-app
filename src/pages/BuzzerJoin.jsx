@@ -14,10 +14,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Zap, Loader2 } from "lucide-react";
+import { Zap, Loader2, Maximize2 } from "lucide-react";
 
 import { initGame, useTeams, useConnection } from "@/store";
 import { ROLE } from "../../shared/constants.js";
+import { enterFullscreen, useIsFullscreen, fullscreenSupported } from "@/lib/fullscreen";
 
 // Must match the key BuzzerPlay reads.
 const LS_TEAM_ID = "buzzer.teamId";
@@ -53,9 +54,13 @@ export default function BuzzerJoin() {
 
   const teams = useTeams(); // already ordered by slot
   const { connection } = useConnection();
+  const isFullscreen = useIsFullscreen();
 
   const handleSelect = (team) => {
     if (selecting) return;
+    // Must run synchronously inside this click handler to count as a user
+    // gesture; it persists across the client-side navigation to /play/:id.
+    enterFullscreen();
     setSelecting(team.id);
     try {
       window.localStorage.setItem(LS_TEAM_ID, team.id);
@@ -98,6 +103,19 @@ export default function BuzzerJoin() {
           />
         ))}
       </div>
+
+      {/* Fullscreen unlock — tap once so the picker (and the buzzer screen
+          after selection) run without browser chrome for the rest of the
+          event (DESIGN.md §6, §13). Hidden once already fullscreen. */}
+      {fullscreenSupported() && !isFullscreen && (
+        <button
+          onClick={() => enterFullscreen()}
+          className="absolute top-4 right-4 z-30 flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white text-sm px-3 py-2 rounded-full transition-all"
+        >
+          <Maximize2 className="w-4 h-4" />
+          מסך מלא
+        </button>
+      )}
 
       <div className="relative z-10 w-full max-w-md">
         {/* Header */}

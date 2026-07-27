@@ -193,21 +193,16 @@ export default function Display() {
                     {teams.map((t) => {
                       const isConnected = connectedTeamIds.has(t.id);
                       return (
-                        <div key={t.id} className="flex flex-col items-center gap-2">
-                          <div className="relative">
-                            <div
-                              className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-lg transition-opacity"
-                              style={{ backgroundColor: t.color, opacity: isConnected ? 1 : 0.3 }}
-                            >
-                              {t.name?.[0]?.toUpperCase()}
-                            </div>
-                            {/* Connection dot */}
-                            <div
-                              className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-neutral-950"
-                              style={{ backgroundColor: isConnected ? "#22C55E" : "#6b7280" }}
-                            />
-                          </div>
-                          <span className={`text-xs font-medium ${isConnected ? "text-white/70" : "text-white/20"}`}>{t.name}</span>
+                        <div key={t.id} className="relative">
+                          <div
+                            className="w-14 h-14 rounded-2xl shadow-lg transition-opacity"
+                            style={{ backgroundColor: t.color, opacity: isConnected ? 1 : 0.3 }}
+                          />
+                          {/* Connection dot */}
+                          <div
+                            className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-neutral-950"
+                            style={{ backgroundColor: isConnected ? "#22C55E" : "#6b7280" }}
+                          />
                         </div>
                       );
                     })}
@@ -243,12 +238,9 @@ export default function Display() {
                         key={t.id}
                         animate={isConnected ? { opacity: [0.5, 1, 0.5] } : {}}
                         transition={{ duration: 2, repeat: Infinity, delay: Math.random() }}
-                        className="px-4 py-2 rounded-full text-white font-bold text-sm flex items-center gap-2"
-                        style={{ backgroundColor: "#000000", border: `2px solid ${isConnected ? t.color : "#374151"}`, opacity: isConnected ? 1 : 0.3 }}
-                      >
-                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: isConnected ? "#22C55E" : "#6b7280" }} />
-                        {t.name}
-                      </motion.div>
+                        className="w-36 h-10 rounded-full"
+                        style={{ backgroundColor: isConnected ? t.color : "#374151", opacity: isConnected ? 1 : 0.3 }}
+                      />
                     );
                   })}
                 </div>
