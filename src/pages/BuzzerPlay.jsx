@@ -22,7 +22,7 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Zap, Loader2, WifiOff } from "lucide-react";
+import { Zap, Loader2, WifiOff, Maximize2 } from "lucide-react";
 
 import {
   initGame,
@@ -36,6 +36,7 @@ import {
   useLastReject,
 } from "@/store";
 import { ROLE, STATUS, REJECT_REASON, UI_COLOR } from "../../shared/constants.js";
+import { enterFullscreen, useIsFullscreen, fullscreenSupported } from "@/lib/fullscreen";
 
 // localStorage keys (this page owns device identity persistence).
 const LS_TEAM_ID = "buzzer.teamId";
@@ -151,6 +152,7 @@ export default function BuzzerPlay() {
   const buzzSent = useBuzzSent();
   const { connection, synced } = useConnection();
   const lastReject = useLastReject();
+  const isFullscreen = useIsFullscreen();
 
   const team = useMemo(
     () => teams.find((t) => t.id === teamId) || null,
@@ -172,6 +174,10 @@ export default function BuzzerPlay() {
     lastPressTsRef.current = edgeTs;
     // The store enforces synced/open/not-already-pressed; this is fire-and-forget.
     buzz(edgeTs);
+    // Fallback fullscreen trigger for tablets that loaded /play/:id directly
+    // (provisioned link) rather than via the /play picker. Runs after the
+    // buzz send so it never delays the edge-timestamp critical path.
+    enterFullscreen();
   }, []);
 
   // --- false-start: brief local lockout flash (DESIGN.md §11, §14) ---------
@@ -258,6 +264,19 @@ export default function BuzzerPlay() {
     >
       {/* Color bar at top */}
       <div className="w-full h-3 shrink-0" style={{ backgroundColor: team.color }} />
+
+      {/* Fullscreen unlock (top-left) — kiosk tablets normally enter fullscreen
+          from the /play team-picker tap; this covers reloads and tablets
+          provisioned straight to /play/:id (DESIGN.md §6, §13). */}
+      {fullscreenSupported() && !isFullscreen && (
+        <button
+          onClick={() => enterFullscreen()}
+          className="absolute top-5 left-4 z-20 flex items-center gap-1.5 text-white/70 bg-black/30 hover:bg-black/40 text-xs font-medium px-3 py-1.5 rounded-full transition-colors"
+        >
+          <Maximize2 className="w-3.5 h-3.5" />
+          <span dir="rtl">מסך מלא</span>
+        </button>
+      )}
 
       {/* Connection / sync indicator (top-right) */}
       <div className="absolute top-5 right-4 z-20 flex items-center gap-2 text-xs font-medium" dir="rtl">
